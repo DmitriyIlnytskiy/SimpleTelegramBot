@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
+import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
@@ -29,6 +30,7 @@ public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
     private final String ROAD_MAP_SDT101 = "map_101";
     private final String ROAD_MAP_SDT104 = "map_104";
     private final String RANDOM_PICTURE  = "random_picture";
+    private final String JAVA_ROAD_MAP  = "java_road_map";
 
     @Value("${telegram.bot.token}")
     private String token;
@@ -44,9 +46,9 @@ public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
 
     public void registerCommands() {
         List<BotCommand> commands = List.of(
-                new BotCommand("/start", "Start the bot"),
-                new BotCommand("/help", "Get help information"),
-                new BotCommand("/photo", "Get a random picture")
+                new BotCommand("/start", "Start the bot")
+                //new BotCommand("/help", "Get help information"),
+                //new BotCommand("/photo", "Get a random picture")
         );
 
         SetMyCommands setMyCommands = new SetMyCommands(commands);
@@ -87,9 +89,28 @@ public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
 
             case ROAD_MAP_SDT104 -> sendRoadMapSDT104(chatId, user);
 
-            case RANDOM_PICTURE -> sendRandomPicture(chatId);
+            case RANDOM_PICTURE  -> sendRandomPicture(chatId);
+            
+            case JAVA_ROAD_MAP   -> sendJavaRoadMap(chatId);
 
             default -> sendMessage(chatId, "Unknown command");
+        }
+    }
+
+    //local file
+    private void sendJavaRoadMap(Long chatId) {
+        InputFile inputFile = new InputFile(new java.io.File("C:\\Users\\dmitr\\IdeaProjects\\javabot\\Java Junior Roadmap.pdf"));
+
+        SendDocument sendDocument = SendDocument.builder()
+                .chatId(chatId)
+                .document(inputFile)
+                .caption("Here is your file!")
+                .build();
+
+        try {
+            telegramClient.execute(sendDocument);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
         }
     }
 
@@ -150,11 +171,14 @@ public class UpdateConsumer implements LongPollingSingleThreadUpdateConsumer {
         var button_104 = InlineKeyboardButton.builder().text("Road map SDT 104: UI/UX").callbackData(ROAD_MAP_SDT104).build();
 
         var button_random_picture = InlineKeyboardButton.builder().text("Random picture").callbackData(RANDOM_PICTURE).build();
+        
+        var button_java_road_map = InlineKeyboardButton.builder().text("Java_road_map").callbackData(JAVA_ROAD_MAP).build();
 
         List<InlineKeyboardRow> keyboardRowList = List.of(
                 new InlineKeyboardRow(button_101),
                 new InlineKeyboardRow(button_104),
-                new InlineKeyboardRow(button_random_picture)
+                new InlineKeyboardRow(button_random_picture),
+                new InlineKeyboardRow(button_java_road_map)
         );
 
         InlineKeyboardMarkup markup = new InlineKeyboardMarkup(keyboardRowList);
